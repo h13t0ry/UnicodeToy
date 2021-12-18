@@ -43,6 +43,25 @@ def _1toN_unicode():
     return good, maybe
 
 
+def _gen_ascii_map(strict_mode=True):
+    ch_map = defaultdict(list)
+    items = [chr(i) for i in range(0, 128)]  # ascii scope
+    unicodes = _unicode_list()
+    for uni in unicodes:
+        normal_ch = unicodedata.normalize('NFKC', uni)
+
+        if strict_mode:
+            if len(normal_ch) == 1 and (normal_ch in items) and (uni not in items):
+                ch_map[normal_ch].append(uni)
+
+        else:
+            for ch_item in normal_ch:
+                # for every ch in NFKCed str
+                if ch_item in items:
+                    ch_map[ch_item].append(uni)
+    return ch_map
+
+
 def find_funny_TLD():
     funny_TLDs = defaultdict(list)
     tlds = _TLD_list()
@@ -60,26 +79,17 @@ def find_funny_TLD():
 def gen_funny_domain():
     good, maybe = _1toN_unicode()
     TLDs = find_funny_TLD()
+    print(f"real_domain \t XSS_payload \t length")
     for item in product(good.keys(), TLDs.keys()):
         real_domain = f"{item[0]}.{item[1]}"
         xss_domain = f"{random.choice(good[item[0]])}.{random.choice(TLDs[item[1]])}"
-        print(f"Real: {real_domain} "
-              f"===> XSS: {xss_domain} "
-              f"===> Length: {len(xss_domain)}")
+        print(f"{real_domain} \t"
+              f"{xss_domain} \t"
+              f"{len(xss_domain)}")
 
 
 def gen_unicode_str(original_str):
-    ch_map = defaultdict(list)
-    items = [i for i in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"]
-    unicodes = _unicode_list()
-    for uni in unicodes:
-        normal_ch = unicodedata.normalize('NFKC', uni)
-        if normal_ch in items:
-            ch_map[normal_ch].append(uni)
-
-    # print("print map table:")
-    # for k, v in ch_map.items():
-    #     print(k, f": {len(v)} : ", v)
+    ch_map = _gen_ascii_map(strict_mode=True)
 
     items = [i for i in original_str]
     n_items = []
@@ -90,10 +100,19 @@ def gen_unicode_str(original_str):
 
 
 if __name__ == '__main__':
-    # generate funny domains
-    gen_funny_domain()
-    print(gen_unicode_str('import'))
-    # N-CTF 2019 python_jail
-    # should run many times to find valid payload
+
+    # # generate homograph ascii-[unicodes] map
+    # print("chr \t ascii_index \t homograph_list")
+    # for k, v in _gen_ascii_map(strict_mode=True).items():
+    #     print(f"({k}) \t {ord(k)} \t {v}")
+
+    # # convert a normal string to homograph string
+    # print(gen_unicode_str("import"))
+
+    # # N-CTF 2019 python_jail
+    # # should run many times to find valid payload
     # code = f"__{gen_unicode_str('import')}__('os').{gen_unicode_str('system')}('whoami')"
     # eval(code)
+
+    # generate funny domains
+    gen_funny_domain()
