@@ -55,6 +55,8 @@ def _gen_ascii_map(strict_mode=True):
                 ch_map[normal_ch].append(uni)
 
         else:
+            if uni in items:
+                continue
             for ch_item in normal_ch:
                 # for every ch in NFKCed str
                 if ch_item in items:
@@ -102,11 +104,11 @@ def gen_unicode_str(original_str):
 if __name__ == '__main__':
 
     # # generate homograph ascii-[unicodes] map
-    # print("chr \t ascii_index \t homograph_list")
-    # for k, v in _gen_ascii_map(strict_mode=True).items():
-    #     print(f"({k}) \t {ord(k)} \t {v}")
+    print("chr \t ascii_index \t homograph_list")
+    for k, v in _gen_ascii_map(strict_mode=False).items():
+        print(f"({k}) \t {ord(k)} \t {v}")
 
-    # # convert a normal string to homograph string
+    # convert a normal string to homograph string
     # print(gen_unicode_str("import"))
 
     # # N-CTF 2019 python_jail
@@ -115,4 +117,4 @@ if __name__ == '__main__':
     # eval(code)
 
     # generate funny domains
-    gen_funny_domain()
+    # gen_funny_domain()
